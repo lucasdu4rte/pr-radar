@@ -1,36 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Radar de PRs
 
-## Getting Started
+Lista local dos seus PRs abertos e dos pedidos de revisão, agrupados por projeto, usando as contas já logadas no `gh`.
 
-First, run the development server:
+## Rodar
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```sh
+npm install
+npm run dev   # http://127.0.0.1:4823
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requer o `gh` logado (`gh auth status`). Cada conta usa o próprio token (`gh auth token --user <login>`), então trocar de conta no app não muda a conta ativa do terminal. Um `GH_TOKEN` no ambiente é ignorado de propósito.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Abrir no VS Code
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+O botão procura um clone do repo nas pastas de `PR_RADAR_ROOTS` (padrão `~/Apps`, até 3 níveis, separadas por `:`), cria uma worktree em `~/.pr-radar/worktrees/<owner>/<repo>/pr-<n>`, roda `gh pr checkout` nela e abre com `code`.
 
-## Learn More
+```sh
+PR_RADAR_ROOTS="~/Apps:~/work" npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Segurança
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O servidor escuta só em `127.0.0.1` e as rotas de API recusam `Host`/`Origin` que não sejam locais, porque elas executam `gh`/`git` com seus tokens.
