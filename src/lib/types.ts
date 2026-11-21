@@ -32,6 +32,22 @@ export type PullRequest = {
   viewerApproved: boolean
 }
 
+export type PullRequestFileStatus = "added" | "removed" | "modified" | "renamed" | "copied" | "changed" | "unchanged"
+
+export type PullRequestFile = {
+  filename: string
+  previousFilename: string | null
+  status: PullRequestFileStatus
+  additions: number
+  deletions: number
+  patch: string | null
+}
+
+export type PullRequestFilesResponse = {
+  files: PullRequestFile[]
+  truncated: boolean
+}
+
 export type PullRequestsResponse = {
   viewer: { login: string; avatarUrl: string }
   pullRequests: PullRequest[]

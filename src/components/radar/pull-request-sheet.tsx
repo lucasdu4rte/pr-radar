@@ -2,10 +2,13 @@
 
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { CheckIcon, CodeIcon, CopyIcon, ExternalLinkIcon, LinkIcon, LoaderCircleIcon, ThumbsUpIcon } from "lucide-react"
+import { CheckIcon, CodeIcon, CopyIcon, ExternalLinkIcon, FileDiffIcon, LinkIcon, LoaderCircleIcon, ThumbsUpIcon } from "lucide-react"
 import { toast } from "sonner"
 
+import { PullRequestFiles, usePullRequestFiles } from "@/components/radar/pull-request-files"
+import type { SheetTab } from "@/components/radar/use-radar-filters"
 import { Age, AuthorAvatar, CiStatus, ReviewStatus } from "@/components/radar/status"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -13,11 +16,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { copyToClipboard } from "@/lib/clipboard"
 import { isStaleReview } from "@/lib/pull-request-insights"
 import type { Account, PullRequest } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 type PullRequestSheetProps = {
   pullRequest: PullRequest | null
   account: Account
   now: number
+  tab: SheetTab
+  onTabChange: (tab: SheetTab) => void
   onClose: () => void
   onApproved: (pullRequestId: string) => void
 }
@@ -101,7 +107,7 @@ function OpenInEditor({ pullRequest, account }: { pullRequest: PullRequest; acco
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs text-muted-foreground">Testar localmente</p>
-      <Button onClick={open} disabled={opening} className="self-start">
+      <Button variant="outline" onClick={open} disabled={opening} className="self-start">
         {opening ? <LoaderCircleIcon className="animate-spin" /> : <CodeIcon />}
         {opening ? "Preparando worktree…" : "Abrir no VS Code"}
       </Button>
@@ -127,10 +133,56 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   )
 }
 
-function PullRequestDetails({ pullRequest, account, now, onApproved }: Omit<PullRequestSheetProps, "pullRequest" | "onClose"> & { pullRequest: PullRequest }) {
-  const [approving, setApproving] = useState(false)
+function SummaryTab({ pullRequest, account, now }: { pullRequest: PullRequest; account: Account; now: number }) {
   const totalLines = pullRequest.additions + pullRequest.deletions || 1
+
+  return (
+    <div className="flex flex-col gap-5">
+      <dl className="grid grid-cols-[110px_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
+        <Detail label="Autor">
+          <AuthorAvatar login={pullRequest.author.login} avatarUrl={pullRequest.author.avatarUrl} className="size-5" />
+          {pullRequest.author.login}
+        </Detail>
+        <Detail label="Branch">
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs break-all">{pullRequest.headRef}</code>→
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{pullRequest.baseRef}</code>
+        </Detail>
+        <Detail label="CI">
+          <CiStatus ci={pullRequest.ci} />
+        </Detail>
+        <Detail label="Reviews">
+          <ReviewStatus pullRequest={pullRequest} />
+        </Detail>
+        <Detail label="Comentários">
+          <span className="font-mono text-xs tabular-nums">{pullRequest.comments}</span>
+        </Detail>
+        <Detail label="Aberto há">
+          <Age pullRequest={pullRequest} now={now} />
+          {isStaleReview(pullRequest, now) && <Badge variant="outline" className="text-amber-600 dark:text-amber-400">parado</Badge>}
+        </Detail>
+        <Detail label="Diff">
+          <span className="flex w-full flex-col gap-1.5">
+            <span className="font-mono text-xs tabular-nums">
+              <span className="text-emerald-600 dark:text-emerald-400">+{pullRequest.additions}</span>{" "}
+              <span className="text-red-600 dark:text-red-400">−{pullRequest.deletions}</span>
+            </span>
+            <span className="flex h-1.5 overflow-hidden rounded-full bg-muted">
+              <span className="bg-emerald-500" style={{ width: `${(pullRequest.additions / totalLines) * 100}%` }} />
+              <span className="bg-red-500" style={{ width: `${(pullRequest.deletions / totalLines) * 100}%` }} />
+            </span>
+          </span>
+        </Detail>
+      </dl>
+
+      <OpenInEditor pullRequest={pullRequest} account={account} />
+    </div>
+  )
+}
+
+function PullRequestDetails({ pullRequest, account, now, tab, onTabChange, onApproved }: Omit<PullRequestSheetProps, "pullRequest" | "onClose"> & { pullRequest: PullRequest }) {
+  const [approving, setApproving] = useState(false)
   const canApprove = pullRequest.role === "review" && !pullRequest.viewerApproved
+  const { data: files } = usePullRequestFiles(account, pullRequest)
 
   return (
     <>
@@ -152,8 +204,8 @@ function PullRequestDetails({ pullRequest, account, now, onApproved }: Omit<Pull
         </Button>
       </SheetHeader>
 
-      <div className="flex flex-col gap-5 overflow-y-auto px-4 pb-6">
-        <div className="flex flex-wrap gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-6">
+        <div className="flex flex-wrap items-center gap-2">
           {canApprove && !approving && (
             <Button className="bg-emerald-600 text-white hover:bg-emerald-600/90" onClick={() => setApproving(true)}>
               <ThumbsUpIcon />
@@ -166,7 +218,7 @@ function PullRequestDetails({ pullRequest, account, now, onApproved }: Omit<Pull
               Você aprovou
             </Badge>
           )}
-          <Button variant={canApprove ? "outline" : "default"} render={<a href={pullRequest.url} target="_blank" rel="noreferrer" />}>
+          <Button variant="outline" render={<a href={pullRequest.url} target="_blank" rel="noreferrer" />}>
             <ExternalLinkIcon />
             Abrir no GitHub
           </Button>
@@ -186,43 +238,26 @@ function PullRequestDetails({ pullRequest, account, now, onApproved }: Omit<Pull
           )}
         </AnimatePresence>
 
-        <dl className="grid grid-cols-[110px_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
-          <Detail label="Autor">
-            <AuthorAvatar login={pullRequest.author.login} avatarUrl={pullRequest.author.avatarUrl} className="size-5" />
-            {pullRequest.author.login}
-          </Detail>
-          <Detail label="Branch">
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs break-all">{pullRequest.headRef}</code>→
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">{pullRequest.baseRef}</code>
-          </Detail>
-          <Detail label="CI">
-            <CiStatus ci={pullRequest.ci} />
-          </Detail>
-          <Detail label="Reviews">
-            <ReviewStatus pullRequest={pullRequest} />
-          </Detail>
-          <Detail label="Comentários">
-            <span className="font-mono text-xs tabular-nums">{pullRequest.comments}</span>
-          </Detail>
-          <Detail label="Aberto há">
-            <Age pullRequest={pullRequest} now={now} />
-            {isStaleReview(pullRequest, now) && <Badge variant="outline" className="text-amber-600 dark:text-amber-400">parado</Badge>}
-          </Detail>
-          <Detail label="Diff">
-            <span className="flex w-full flex-col gap-1.5">
-              <span className="font-mono text-xs tabular-nums">
-                <span className="text-emerald-600 dark:text-emerald-400">+{pullRequest.additions}</span>{" "}
-                <span className="text-red-600 dark:text-red-400">−{pullRequest.deletions}</span>
-              </span>
-              <span className="flex h-1.5 overflow-hidden rounded-full bg-muted">
-                <span className="bg-emerald-500" style={{ width: `${(pullRequest.additions / totalLines) * 100}%` }} />
-                <span className="bg-red-500" style={{ width: `${(pullRequest.deletions / totalLines) * 100}%` }} />
-              </span>
-            </span>
-          </Detail>
-        </dl>
-
-        <OpenInEditor pullRequest={pullRequest} account={account} />
+        <Tabs value={tab} onValueChange={(value) => onTabChange(value as SheetTab)} className="gap-4">
+          <TabsList>
+            <TabsTrigger value="summary" className="px-3">
+              Resumo
+            </TabsTrigger>
+            <TabsTrigger value="files" className="px-3">
+              <FileDiffIcon />
+              Arquivos
+              {files && (
+                <span className="rounded-full bg-muted px-1.5 font-mono text-[11px] text-muted-foreground tabular-nums">{files.files.length}</span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="summary">
+            <SummaryTab pullRequest={pullRequest} account={account} now={now} />
+          </TabsContent>
+          <TabsContent value="files">
+            <PullRequestFiles pullRequest={pullRequest} account={account} />
+          </TabsContent>
+        </Tabs>
       </div>
     </>
   )
@@ -231,7 +266,12 @@ function PullRequestDetails({ pullRequest, account, now, onApproved }: Omit<Pull
 export function PullRequestSheet({ pullRequest, open, onClose, ...rest }: PullRequestSheetProps & { open: boolean }) {
   return (
     <Sheet open={open && pullRequest !== null} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <SheetContent className="w-full gap-4 sm:max-w-md">
+      <SheetContent
+        className={cn(
+          "gap-4 transition-[max-width] duration-300 ease-out data-[side=right]:w-full",
+          rest.tab === "files" ? "data-[side=right]:sm:max-w-[min(1280px,96vw)]" : "data-[side=right]:sm:max-w-md",
+        )}
+      >
         {pullRequest && <PullRequestDetails key={pullRequest.id} pullRequest={pullRequest} {...rest} />}
       </SheetContent>
     </Sheet>

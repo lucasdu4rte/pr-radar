@@ -28,7 +28,7 @@ export function errorResponse(error: unknown, status = 500) {
 
 const ACCOUNT_PATTERN = /^[A-Za-z0-9-]+$/
 const HOST_PATTERN = /^[A-Za-z0-9.-]+$/
-const REPO_PATTERN = /^[\w.-]+\/[\w.-]+$/
+const REPO_PATTERN = /^[A-Za-z0-9-]+\/(?!\.{1,2}$)[\w.-]+$/
 
 export function parseAccount(login: unknown, host: unknown) {
   if (typeof login !== "string" || !ACCOUNT_PATTERN.test(login)) return null

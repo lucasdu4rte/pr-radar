@@ -160,7 +160,8 @@ export function RadarApp() {
   const [sheetPullRequest, setSheetPullRequest] = useState<PullRequest | null>(null)
   if (openPullRequest && openPullRequest !== sheetPullRequest) setSheetPullRequest(openPullRequest)
 
-  const openSheet = (pullRequest: PullRequest) => setFilters({ pullRequest: pullRequestParam(pullRequest.repo, pullRequest.number) })
+  const openSheet = (pullRequest: PullRequest) =>
+    setFilters({ pullRequest: pullRequestParam(pullRequest.repo, pullRequest.number), sheetTab: "summary" })
 
   const changeAccount = (account: Account) => {
     storeAccount(account)
@@ -252,6 +253,8 @@ export function RadarApp() {
           pullRequest={sheetPullRequest}
           account={selected}
           now={now}
+          tab={filters.sheetTab}
+          onTabChange={(sheetTab) => setFilters({ sheetTab })}
           onClose={() => setFilters({ pullRequest: null })}
           onApproved={markApproved}
         />

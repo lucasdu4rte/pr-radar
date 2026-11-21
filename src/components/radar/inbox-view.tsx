@@ -6,6 +6,7 @@ import { FolderGit2Icon, InboxIcon } from "lucide-react"
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Age, AuthorAvatar, CiStatus, DraftBadge, ReviewStatus } from "@/components/radar/status"
+import { DiffStat } from "@/components/radar/file-meta"
 import { PullRequestContextMenu } from "@/components/radar/pull-request-context-menu"
 import { groupByRepo, isBlocked, splitRepo } from "@/lib/pull-request-insights"
 import type { PullRequest } from "@/lib/types"
@@ -65,7 +66,7 @@ function PullRequestRow({ pullRequest, index, onOpen, now }: { pullRequest: Pull
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: Math.min(index, 12) * 0.025, ease: [0.2, 0.8, 0.3, 1] }}
       onClick={onOpen}
-      className="grid w-full grid-cols-[20px_minmax(0,1fr)_24px_36px] items-center gap-3 border-t px-4 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none sm:grid-cols-[20px_minmax(0,1fr)_96px_24px_36px]"
+      className="grid w-full grid-cols-[20px_minmax(0,1fr)_24px_36px] items-center gap-3 border-t px-4 py-2.5 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none sm:grid-cols-[20px_minmax(0,1fr)_84px_96px_24px_36px]"
     >
       <CiStatus ci={pullRequest.ci} compact />
       <span className="min-w-0">
@@ -76,6 +77,9 @@ function PullRequestRow({ pullRequest, index, onOpen, now }: { pullRequest: Pull
         <span className="block truncate text-xs text-muted-foreground">
           #{pullRequest.number} · {pullRequest.headRef}
         </span>
+      </span>
+      <span className="hidden text-right sm:block" title={`${pullRequest.additions + pullRequest.deletions} linhas alteradas`}>
+        <DiffStat additions={pullRequest.additions} deletions={pullRequest.deletions} />
       </span>
       <span className="hidden sm:block">
         <ReviewStatus pullRequest={pullRequest} />

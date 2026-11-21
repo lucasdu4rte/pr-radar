@@ -1,5 +1,14 @@
-import { getToken, graphql } from "@/lib/server/gh"
-import type { CiState, PullRequest, PullRequestRole, PullRequestsResponse, ReviewState } from "@/lib/types"
+import { getToken, graphql, rest } from "@/lib/server/gh"
+import type {
+  CiState,
+  PullRequest,
+  PullRequestFile,
+  PullRequestFilesResponse,
+  PullRequestFileStatus,
+  PullRequestRole,
+  PullRequestsResponse,
+  ReviewState,
+} from "@/lib/types"
 
 const PULL_REQUESTS_QUERY = /* GraphQL */ `
   query PullRequests($mine: String!, $review: String!) {
@@ -121,6 +130,40 @@ export async function fetchPullRequests(login: string, host: string): Promise<Pu
     .forEach((node) => byId.set(node.id, toPullRequest(node, "review")))
 
   return { viewer: data.viewer, pullRequests: [...byId.values()], fetchedAt: new Date().toISOString() }
+}
+
+const FILES_PER_PAGE = 100
+const MAX_FILE_PAGES = 5
+
+type RawPullRequestFile = {
+  filename: string
+  previous_filename?: string
+  status: PullRequestFileStatus
+  additions: number
+  deletions: number
+  patch?: string
+}
+
+export async function fetchPullRequestFiles(login: string, host: string, repo: string, number: number): Promise<PullRequestFilesResponse> {
+  const token = await getToken(login, host)
+  const files: PullRequestFile[] = []
+
+  for (let page = 1; page <= MAX_FILE_PAGES; page++) {
+    const batch = await rest<RawPullRequestFile[]>(host, token, `/repos/${repo}/pulls/${number}/files?per_page=${FILES_PER_PAGE}&page=${page}`)
+    files.push(
+      ...batch.map((file) => ({
+        filename: file.filename,
+        previousFilename: file.previous_filename ?? null,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        patch: file.patch ?? null,
+      })),
+    )
+    if (batch.length < FILES_PER_PAGE) return { files, truncated: false }
+  }
+
+  return { files, truncated: true }
 }
 
 export async function approvePullRequest(login: string, host: string, pullRequestId: string, body: string) {

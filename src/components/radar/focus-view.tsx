@@ -4,6 +4,7 @@ import { motion } from "motion/react"
 import { CircleAlertIcon, ClockIcon, EyeIcon, GitMergeIcon, type LucideIcon } from "lucide-react"
 
 import { Age, AuthorAvatar, CiStatus, DraftBadge, ReviewStatus } from "@/components/radar/status"
+import { DiffStat } from "@/components/radar/file-meta"
 import { PullRequestContextMenu } from "@/components/radar/pull-request-context-menu"
 import { type FocusBucketKey, focusBuckets } from "@/lib/pull-request-insights"
 import type { PullRequest } from "@/lib/types"
@@ -37,6 +38,7 @@ function FocusCard({ pullRequest, index, onOpen, now }: { pullRequest: PullReque
         <AuthorAvatar login={pullRequest.author.login} avatarUrl={pullRequest.author.avatarUrl} className="size-5" />
         <CiStatus ci={pullRequest.ci} />
         <ReviewStatus pullRequest={pullRequest} />
+        <DiffStat additions={pullRequest.additions} deletions={pullRequest.deletions} />
         <span className="ml-auto">
           <Age pullRequest={pullRequest} now={now} />
         </span>

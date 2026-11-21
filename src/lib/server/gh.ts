@@ -57,6 +57,19 @@ export async function getToken(login: string, host: string) {
   return token
 }
 
+function restBaseUrl(host: string) {
+  return host === "github.com" ? "https://api.github.com" : `https://${host}/api/v3`
+}
+
+export async function rest<T>(host: string, token: string, path: string) {
+  const response = await fetch(`${restBaseUrl(host)}${path}`, {
+    headers: { Authorization: `bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
+    cache: "no-store",
+  })
+  if (!response.ok) throw new Error(`GitHub respondeu ${response.status}: ${await response.text()}`)
+  return (await response.json()) as T
+}
+
 function graphqlEndpoint(host: string) {
   return host === "github.com" ? "https://api.github.com/graphql" : `https://${host}/api/graphql`
 }

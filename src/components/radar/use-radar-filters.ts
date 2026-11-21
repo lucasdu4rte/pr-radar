@@ -6,6 +6,8 @@ import type { RoleFilter } from "@/lib/pull-request-insights"
 
 export type View = "inbox" | "focus"
 
+export type SheetTab = "summary" | "files"
+
 export type RadarFilters = {
   view: View
   role: RoleFilter
@@ -15,11 +17,13 @@ export type RadarFilters = {
   account: string | null
   host: string | null
   pullRequest: string | null
+  sheetTab: SheetTab
 }
 
 const DEFAULT_HOST = "github.com"
 const VIEWS: View[] = ["inbox", "focus"]
 const ROLES: RoleFilter[] = ["review", "mine", "all"]
+const SHEET_TABS: SheetTab[] = ["summary", "files"]
 
 function oneOf<T extends string>(value: string | null, allowed: T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback
@@ -35,6 +39,7 @@ function parse(params: URLSearchParams): RadarFilters {
     account: params.get("account"),
     host: params.get("host"),
     pullRequest: params.get("pr"),
+    sheetTab: oneOf(params.get("tab"), SHEET_TABS, "summary"),
   }
 }
 
@@ -48,6 +53,7 @@ function serialize(filters: RadarFilters) {
   if (filters.query) params.set("q", filters.query)
   if (filters.hideDrafts) params.set("drafts", "hide")
   if (filters.pullRequest) params.set("pr", filters.pullRequest)
+  if (filters.pullRequest && filters.sheetTab !== "summary") params.set("tab", filters.sheetTab)
   return params.toString()
 }
 
