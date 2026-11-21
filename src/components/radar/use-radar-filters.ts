@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react"
 
+import { isDemo } from "@/lib/demo"
 import type { RoleFilter } from "@/lib/pull-request-insights"
 
 export type View = "inbox" | "focus"
@@ -43,6 +44,7 @@ function parse(params: URLSearchParams): RadarFilters {
 
 function serialize(filters: RadarFilters) {
   const params = new URLSearchParams()
+  if (isDemo()) params.set("demo", "")
   if (filters.account) params.set("account", filters.account)
   if (filters.host && filters.host !== DEFAULT_HOST) params.set("host", filters.host)
   if (filters.view !== "inbox") params.set("view", filters.view)

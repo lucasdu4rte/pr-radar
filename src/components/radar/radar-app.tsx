@@ -92,6 +92,12 @@ function usePullRequests(account: Account | null) {
   }
 }
 
+function refreshLabel(fetchedAt: string | undefined, loading: boolean, now: number) {
+  if (!fetchedAt || loading) return "updating…"
+  const age = ageLabel(fetchedAt, now)
+  return age === "now" ? "updated just now" : `updated ${age} ago`
+}
+
 function LoadingRows() {
   return (
     <div className="flex flex-1 flex-col gap-3 p-4">
@@ -105,11 +111,11 @@ function LoadingRows() {
 function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center gap-3 px-4 py-24 text-center">
-      <p className="font-medium">Não consegui carregar os PRs</p>
+      <p className="font-medium">Couldn't load pull requests</p>
       <p className="text-sm break-words text-muted-foreground">{message}</p>
       {onRetry && (
         <Button variant="outline" onClick={onRetry}>
-          Tentar de novo
+          Try again
         </Button>
       )}
     </div>
@@ -158,7 +164,7 @@ export function RadarApp() {
     setFilters({ account: account.login, host: account.host, project: null, pullRequest: null })
   }
 
-  if (accountsError) return <ErrorState message={`gh auth status falhou: ${accountsError}`} />
+  if (accountsError) return <ErrorState message={`gh auth status failed: ${accountsError}`} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -180,7 +186,7 @@ export function RadarApp() {
             </TabsTrigger>
             <TabsTrigger value="focus" className="px-2.5">
               <TargetIcon />
-              Foco
+              Focus
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -190,9 +196,9 @@ export function RadarApp() {
             <TabsList>
               {(
                 [
-                  ["review", "Para revisar"],
-                  ["mine", "Meus"],
-                  ["all", "Todos"],
+                  ["review", "To review"],
+                  ["mine", "Mine"],
+                  ["all", "All"],
                 ] as const
               ).map(([value, label]) => (
                 <TabsTrigger key={value} value={value} className="px-2.5">
@@ -210,21 +216,21 @@ export function RadarApp() {
             id="pr-search"
             value={query}
             onChange={(event) => setFilters({ query: event.target.value })}
-            placeholder="Buscar título, repo, autor ou #número"
+            placeholder="Search title, repo, author or #number"
             className="pr-8 pl-8"
-            aria-label="Buscar PRs"
+            aria-label="Search pull requests"
           />
           <kbd className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded border px-1.5 font-mono text-[11px] text-muted-foreground">/</kbd>
         </label>
 
         <label className="flex items-center gap-2 text-sm whitespace-nowrap text-muted-foreground">
           <Switch checked={hideDrafts} onCheckedChange={(checked) => setFilters({ hideDrafts: checked })} />
-          Ocultar drafts
+          Hide drafts
         </label>
 
         <Button variant="ghost" size="sm" onClick={reload} disabled={loading} className="text-muted-foreground">
           <RefreshCwIcon className={cn(loading && "animate-spin")} />
-          <span className="hidden lg:inline">{data && !loading ? `atualizado ${ageLabel(data.fetchedAt, now) === "agora" ? "agora" : `há ${ageLabel(data.fetchedAt, now)}`}` : "atualizando…"}</span>
+          <span className="hidden lg:inline">{refreshLabel(data?.fetchedAt, loading, now)}</span>
         </Button>
       </header>
 

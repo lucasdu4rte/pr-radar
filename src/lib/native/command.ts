@@ -17,6 +17,6 @@ function tokenEnv(token?: string) {
 
 export async function run(program: Program, args: string[], options: { token?: string; cwd?: string } = {}) {
   const output = await Command.create(program, args, { cwd: options.cwd, env: tokenEnv(options.token) }).execute()
-  if (output.code !== 0) throw new Error(output.stderr.trim() || `${program} terminou com código ${output.code}`)
+  if (output.code !== 0) throw new Error(output.stderr.trim() || `${program} exited with code ${output.code}`)
   return output.stdout
 }

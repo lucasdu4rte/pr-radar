@@ -1,3 +1,4 @@
+import { demoPullRequestFiles, demoPullRequests, isDemo } from "@/lib/demo"
 import { graphql, rest } from "@/lib/github/client"
 import { assertPullRequestNumber, assertRepo } from "@/lib/native/validation"
 import type {
@@ -118,6 +119,7 @@ function toPullRequest(raw: RawPullRequest, role: PullRequestRole): PullRequest 
 const isPullRequest = (node: RawPullRequest | Record<string, never>): node is RawPullRequest => "id" in node
 
 export async function fetchPullRequests(account: Account): Promise<PullRequestsResponse> {
+  if (isDemo()) return demoPullRequests()
   const data = await graphql<RawResponse>(account, PULL_REQUESTS_QUERY, {
     mine: "is:pr is:open archived:false author:@me",
     review: "is:pr is:open archived:false review-requested:@me",
@@ -146,6 +148,7 @@ type RawPullRequestFile = {
 }
 
 export async function fetchPullRequestFiles(account: Account, repo: string, number: number): Promise<PullRequestFilesResponse> {
+  if (isDemo()) return demoPullRequestFiles()
   assertRepo(repo)
   assertPullRequestNumber(number)
   const files: PullRequestFile[] = []
@@ -169,5 +172,6 @@ export async function fetchPullRequestFiles(account: Account, repo: string, numb
 }
 
 export async function approvePullRequest(account: Account, pullRequestId: string, body: string) {
+  if (isDemo()) throw new Error("Not available in demo mode")
   await graphql(account, APPROVE_MUTATION, { pullRequestId, body: body.trim() || null })
 }

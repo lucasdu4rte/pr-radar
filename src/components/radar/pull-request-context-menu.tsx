@@ -12,11 +12,11 @@ export function PullRequestContextMenu({ pullRequest, children }: { pullRequest:
       <ContextMenuContent className="w-44">
         <ContextMenuItem onClick={() => openExternal(pullRequest.url)}>
           <ExternalLinkIcon />
-          Abrir PR
+          Open PR
         </ContextMenuItem>
-        <ContextMenuItem onClick={() => copyToClipboard(pullRequest.url, "Link do PR copiado")}>
+        <ContextMenuItem onClick={() => copyToClipboard(pullRequest.url, "PR link copied")}>
           <LinkIcon />
-          Copiar link
+          Copy link
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

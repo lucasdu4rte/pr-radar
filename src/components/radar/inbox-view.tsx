@@ -21,7 +21,7 @@ type InboxViewProps = {
 function groupSummary(pullRequests: PullRequest[]) {
   const waiting = pullRequests.filter((pullRequest) => pullRequest.role === "review").length
   const blocked = pullRequests.filter((pullRequest) => pullRequest.role === "mine" && isBlocked(pullRequest)).length
-  return [waiting && `${waiting} esperando você`, blocked && `${blocked} bloqueado${blocked > 1 ? "s" : ""}`]
+  return [waiting && `${waiting} waiting for you`, blocked && `${blocked} blocked`]
     .filter(Boolean)
     .join(" · ")
 }
@@ -39,13 +39,13 @@ function ProjectNav({ groups, total, project, onProjectChange }: {
     )
 
   return (
-    <nav aria-label="Projetos" className="flex shrink-0 gap-1 overflow-x-auto border-b p-2 md:w-60 md:flex-col md:overflow-visible md:border-r md:border-b-0">
+    <nav aria-label="Projects" className="flex shrink-0 gap-1 overflow-x-auto border-b p-2 md:w-60 md:flex-col md:overflow-visible md:border-r md:border-b-0">
       <button className={item(project === null)} onClick={() => onProjectChange(null)}>
         <InboxIcon className="size-4 shrink-0" />
-        <span className="flex-1 truncate text-left">Todos os projetos</span>
+        <span className="flex-1 truncate text-left">All projects</span>
         <span className="rounded-full bg-background px-1.5 font-mono text-[11px] tabular-nums">{total}</span>
       </button>
-      <p className="hidden px-2 pt-3 pb-1 text-[11px] font-medium tracking-wider text-muted-foreground uppercase md:block">Projetos</p>
+      <p className="hidden px-2 pt-3 pb-1 text-[11px] font-medium tracking-wider text-muted-foreground uppercase md:block">Projects</p>
       {groups.map((group) => (
         <button key={group.repo} title={group.repo} className={item(project === group.repo)} onClick={() => onProjectChange(group.repo)}>
           <FolderGit2Icon className="size-4 shrink-0" />
@@ -76,7 +76,7 @@ function PullRequestRow({ pullRequest, index, onOpen, now }: { pullRequest: Pull
           #{pullRequest.number} · {pullRequest.headRef}
         </span>
       </span>
-      <span className="hidden text-right sm:block" title={`${pullRequest.additions + pullRequest.deletions} linhas alteradas`}>
+      <span className="hidden text-right sm:block" title={`${pullRequest.additions + pullRequest.deletions} lines changed`}>
         <DiffStat additions={pullRequest.additions} deletions={pullRequest.deletions} />
       </span>
       <span className="hidden sm:block">
@@ -103,7 +103,7 @@ export function InboxView({ pullRequests, project, onProjectChange, onOpen, now 
   }
 
   if (groups.length === 0) {
-    return <p className="flex-1 py-24 text-center text-sm text-muted-foreground">Nenhum PR aberto neste filtro.</p>
+    return <p className="flex-1 py-24 text-center text-sm text-muted-foreground">No open pull requests for this filter.</p>
   }
 
   return (

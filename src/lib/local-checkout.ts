@@ -2,6 +2,7 @@ import { homeDir, join } from "@tauri-apps/api/path"
 import { exists, readDir, readTextFile } from "@tauri-apps/plugin-fs"
 import { openPath } from "@tauri-apps/plugin-opener"
 
+import { isDemo } from "@/lib/demo"
 import { getToken } from "@/lib/github/client"
 import { run } from "@/lib/native/command"
 import { assertAccount, assertPullRequestNumber, assertRepo } from "@/lib/native/validation"
@@ -92,13 +93,14 @@ async function checkoutPullRequest(worktree: string, number: number, token: stri
 }
 
 export async function openPullRequestInEditor(account: Account, repo: string, number: number) {
+  if (isDemo()) throw new Error("Not available in demo mode")
   assertAccount(account)
   assertRepo(repo)
   assertPullRequestNumber(number)
 
   const clone = await findClone(repo)
   if (!clone) {
-    throw new CloneNotFoundError(`Não achei um clone de ${repo} em ${readSearchRoots()}.`)
+    throw new CloneNotFoundError(`No clone of ${repo} found in ${readSearchRoots()}.`)
   }
 
   const token = await getToken(account)

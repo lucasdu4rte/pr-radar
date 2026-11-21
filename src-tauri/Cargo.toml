@@ -1,7 +1,7 @@
 [package]
 name = "pr-radar"
 version = "0.1.0"
-description = "Radar de PRs"
+description = "PR Radar"
 authors = []
 license = ""
 repository = ""

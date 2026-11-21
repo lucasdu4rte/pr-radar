@@ -117,8 +117,8 @@ function ModeToggle({ mode, onChange }: { mode: FileNavMode; onChange: (mode: Fi
 
   return (
     <div className="flex rounded-lg bg-muted p-0.5">
-      {option("tree", "Ver como árvore", FolderTreeIcon)}
-      {option("list", "Ver como lista", ListIcon)}
+      {option("tree", "Show as tree", FolderTreeIcon)}
+      {option("list", "Show as list", ListIcon)}
     </div>
   )
 }
@@ -142,9 +142,9 @@ export function FileNav({ files }: { files: PullRequestFile[] }) {
     })
 
   return (
-    <nav aria-label="Arquivos alterados" className="sticky top-0 hidden max-h-[calc(100dvh-12rem)] flex-col gap-1 md:flex">
+    <nav aria-label="Changed files" className="sticky top-0 hidden max-h-[calc(100dvh-12rem)] flex-col gap-1 md:flex">
       <div className="flex items-center justify-between gap-2 px-2 pb-1">
-        <span className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">{files.length} arquivos</span>
+        <span className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">{files.length} {files.length === 1 ? "file" : "files"}</span>
         <ModeToggle mode={mode} onChange={changeMode} />
       </div>
       <div className="flex flex-col gap-0.5 overflow-y-auto">

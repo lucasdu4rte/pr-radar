@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Radar de PRs",
+  "productName": "PR Radar",
   "version": "0.1.0",
   "identifier": "app.pr-radar.desktop",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Radar de PRs",
+        "title": "PR Radar",
         "width": 1360,
         "height": 860,
         "minWidth": 480,

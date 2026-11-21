@@ -7,6 +7,6 @@ export async function copyToClipboard(text: string, successMessage: string) {
     await writeClipboard(text)
     toast.success(successMessage)
   } catch {
-    toast.error("Não consegui copiar. Selecione o texto e copie.")
+    toast.error("Couldn't copy. Select the text and copy it.")
   }
 }

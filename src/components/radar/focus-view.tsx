@@ -9,10 +9,10 @@ import type { PullRequest } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const BUCKETS: { key: FocusBucketKey; title: string; hint: string; icon: LucideIcon; tone: string }[] = [
-  { key: "review", title: "Esperando sua revisão", hint: "Mais antigos primeiro. Laranja = parado há mais de 2 dias.", icon: EyeIcon, tone: "text-blue-600 dark:text-blue-400" },
-  { key: "blocked", title: "Seus PRs bloqueados", hint: "CI falhou ou pediram mudanças.", icon: CircleAlertIcon, tone: "text-red-600 dark:text-red-400" },
-  { key: "ready", title: "Prontos para merge", hint: "CI ok e review aprovada.", icon: GitMergeIcon, tone: "text-emerald-600 dark:text-emerald-400" },
-  { key: "waiting", title: "Aguardando outros", hint: "CI rodando, falta review ou ainda é draft.", icon: ClockIcon, tone: "text-amber-600 dark:text-amber-400" },
+  { key: "review", title: "Waiting for your review", hint: "Oldest first. Orange = waiting for more than 2 days.", icon: EyeIcon, tone: "text-blue-600 dark:text-blue-400" },
+  { key: "blocked", title: "Your blocked PRs", hint: "CI failed or changes were requested.", icon: CircleAlertIcon, tone: "text-red-600 dark:text-red-400" },
+  { key: "ready", title: "Ready to merge", hint: "CI passed and review approved.", icon: GitMergeIcon, tone: "text-emerald-600 dark:text-emerald-400" },
+  { key: "waiting", title: "Waiting on others", hint: "CI running, review missing or still a draft.", icon: ClockIcon, tone: "text-amber-600 dark:text-amber-400" },
 ]
 
 function FocusCard({ pullRequest, index, onOpen, now }: { pullRequest: PullRequest; index: number; onOpen: () => void; now: number }) {
@@ -62,7 +62,7 @@ export function FocusView({ pullRequests, onOpen, now }: { pullRequests: PullReq
             <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
           </header>
           <div className="flex flex-col gap-2 p-2">
-            {buckets[key].length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Nada nesta fila.</p>}
+            {buckets[key].length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Nothing in this queue.</p>}
             {buckets[key].map((pullRequest) => (
               <PullRequestContextMenu key={pullRequest.id} pullRequest={pullRequest}>
                 <FocusCard pullRequest={pullRequest} index={cardIndex++} onOpen={() => onOpen(pullRequest)} now={now} />

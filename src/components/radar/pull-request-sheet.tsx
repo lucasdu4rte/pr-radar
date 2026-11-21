@@ -42,10 +42,10 @@ function ApproveForm({ pullRequest, account, onDone, onCancel }: {
     setSending(true)
     try {
       await approvePullRequest(account, pullRequest.id, comment)
-      toast.success(`PR #${pullRequest.number} aprovado`)
+      toast.success(`PR #${pullRequest.number} approved`)
       onDone()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não consegui aprovar")
+      toast.error(error instanceof Error ? error.message : "Couldn't approve")
       setSending(false)
     }
   }
@@ -60,16 +60,16 @@ function ApproveForm({ pullRequest, account, onDone, onCancel }: {
     >
       <div className="flex flex-col gap-2 rounded-lg border bg-muted/50 p-3">
         <label htmlFor="approve-comment" className="text-xs text-muted-foreground">
-          Comentário da aprovação (opcional), enviado como {account.login}
+          Approval comment (optional), sent as {account.login}
         </label>
         <Textarea id="approve-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="LGTM" autoFocus />
         <div className="flex gap-2">
           <Button onClick={submit} disabled={sending} className="bg-emerald-600 text-white hover:bg-emerald-600/90">
             {sending ? <LoaderCircleIcon className="animate-spin" /> : <CheckIcon />}
-            {sending ? "Enviando…" : "Enviar aprovação"}
+            {sending ? "Sending…" : "Send approval"}
           </Button>
           <Button variant="outline" onClick={onCancel} disabled={sending}>
-            Cancelar
+            Cancel
           </Button>
         </div>
       </div>
@@ -89,12 +89,12 @@ function CloneRootsField({ onSaved }: { onSaved: () => void }) {
   return (
     <form onSubmit={save} className="flex flex-col gap-1.5 rounded-lg border bg-muted/50 p-3">
       <label htmlFor="clone-roots" className="text-xs text-muted-foreground">
-        Pastas onde procurar clones (separe com vírgula, busca até 3 níveis)
+        Folders to search for clones (comma separated, up to 3 levels deep)
       </label>
       <div className="flex gap-2">
         <Input id="clone-roots" value={roots} onChange={(event) => setRoots(event.target.value)} placeholder="~/Apps, ~/work" className="font-mono text-xs" />
         <Button type="submit" variant="outline">
-          Salvar e tentar
+          Save and retry
         </Button>
       </div>
     </form>
@@ -110,11 +110,11 @@ function OpenInEditor({ pullRequest, account }: { pullRequest: PullRequest; acco
     setOpening(true)
     try {
       const { worktree } = await openPullRequestInEditor(account, pullRequest.repo, pullRequest.number)
-      toast.success("Aberto no VS Code", { description: worktree })
+      toast.success("Opened in VS Code", { description: worktree })
       setCloneMissing(false)
     } catch (error) {
       setCloneMissing(error instanceof CloneNotFoundError)
-      toast.error("Não consegui abrir no VS Code", { description: error instanceof Error ? error.message : undefined })
+      toast.error("Couldn't open in VS Code", { description: error instanceof Error ? error.message : undefined })
     } finally {
       setOpening(false)
     }
@@ -122,18 +122,18 @@ function OpenInEditor({ pullRequest, account }: { pullRequest: PullRequest; acco
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs text-muted-foreground">Testar localmente</p>
+      <p className="text-xs text-muted-foreground">Test locally</p>
       <Button variant="outline" onClick={open} disabled={opening} className="self-start">
         {opening ? <LoaderCircleIcon className="animate-spin" /> : <CodeIcon />}
-        {opening ? "Preparando worktree…" : "Abrir no VS Code"}
+        {opening ? "Preparing worktree…" : "Open in VS Code"}
       </Button>
       <p className="text-xs text-muted-foreground">
-        Faz checkout da branch numa worktree em ~/.pr-radar/worktrees e abre a pasta, sem mexer no seu clone.
+        Checks out the branch in a worktree under ~/.pr-radar/worktrees and opens it, without touching your clone.
       </p>
       {cloneMissing && <CloneRootsField onSaved={open} />}
       <div className="flex items-center gap-2 rounded-lg border bg-muted px-3 py-2 font-mono text-xs">
         <span className="min-w-0 flex-1 break-all">{checkoutCommand}</span>
-        <Button variant="ghost" size="icon-xs" aria-label="Copiar comando" onClick={() => copyToClipboard(checkoutCommand, "Comando copiado")}>
+        <Button variant="ghost" size="icon-xs" aria-label="Copy command" onClick={() => copyToClipboard(checkoutCommand, "Command copied")}>
           <CopyIcon />
         </Button>
       </div>
@@ -156,7 +156,7 @@ function SummaryTab({ pullRequest, account, now }: { pullRequest: PullRequest; a
   return (
     <div className="flex flex-col gap-5">
       <dl className="grid grid-cols-[110px_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
-        <Detail label="Autor">
+        <Detail label="Author">
           <AuthorAvatar login={pullRequest.author.login} avatarUrl={pullRequest.author.avatarUrl} className="size-5" />
           {pullRequest.author.login}
         </Detail>
@@ -170,12 +170,12 @@ function SummaryTab({ pullRequest, account, now }: { pullRequest: PullRequest; a
         <Detail label="Reviews">
           <ReviewStatus pullRequest={pullRequest} />
         </Detail>
-        <Detail label="Comentários">
+        <Detail label="Comments">
           <span className="font-mono text-xs tabular-nums">{pullRequest.comments}</span>
         </Detail>
-        <Detail label="Aberto há">
+        <Detail label="Opened">
           <Age pullRequest={pullRequest} now={now} />
-          {isStaleReview(pullRequest, now) && <Badge variant="outline" className="text-amber-600 dark:text-amber-400">parado</Badge>}
+          {isStaleReview(pullRequest, now) && <Badge variant="outline" className="text-amber-600 dark:text-amber-400">stale</Badge>}
         </Detail>
         <Detail label="Diff">
           <span className="flex w-full flex-col gap-1.5">
@@ -208,14 +208,14 @@ function PullRequestDetails({ pullRequest, account, now, tab, onTabChange, onApp
           {pullRequest.repo} #{pullRequest.number}
         </span>
         <SheetTitle className="text-base leading-snug text-balance">{pullRequest.title}</SheetTitle>
-        <SheetDescription className="sr-only">Detalhes do pull request</SheetDescription>
+        <SheetDescription className="sr-only">Pull request details</SheetDescription>
         <Button
           variant="ghost"
           size="icon-sm"
           className="absolute top-3 right-12"
-          aria-label="Copiar link do PR"
-          title="Copiar link do PR"
-          onClick={() => copyToClipboard(pullRequest.url, "Link do PR copiado")}
+          aria-label="Copy PR link"
+          title="Copy PR link"
+          onClick={() => copyToClipboard(pullRequest.url, "PR link copied")}
         >
           <LinkIcon />
         </Button>
@@ -226,18 +226,18 @@ function PullRequestDetails({ pullRequest, account, now, tab, onTabChange, onApp
           {canApprove && !approving && (
             <Button className="bg-emerald-600 text-white hover:bg-emerald-600/90" onClick={() => setApproving(true)}>
               <ThumbsUpIcon />
-              Aprovar
+              Approve
             </Button>
           )}
           {pullRequest.viewerApproved && (
             <Badge className="h-8 gap-1 bg-emerald-600/10 px-3 text-emerald-700 dark:text-emerald-400">
               <CheckIcon />
-              Você aprovou
+              You approved
             </Badge>
           )}
           <Button variant="outline" render={<a href={pullRequest.url} target="_blank" rel="noreferrer" />}>
             <ExternalLinkIcon />
-            Abrir no GitHub
+            Open on GitHub
           </Button>
         </div>
 
@@ -258,11 +258,11 @@ function PullRequestDetails({ pullRequest, account, now, tab, onTabChange, onApp
         <Tabs value={tab} onValueChange={(value) => onTabChange(value as SheetTab)} className="gap-4">
           <TabsList>
             <TabsTrigger value="summary" className="px-3">
-              Resumo
+              Summary
             </TabsTrigger>
             <TabsTrigger value="files" className="px-3">
               <FileDiffIcon />
-              Arquivos
+              Files
               {files && (
                 <span className="rounded-full bg-muted px-1.5 font-mono text-[11px] text-muted-foreground tabular-nums">{files.files.length}</span>
               )}

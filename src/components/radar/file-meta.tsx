@@ -1,13 +1,13 @@
 import type { PullRequestFileStatus } from "@/lib/types"
 
 export const STATUS_DISPLAY: Record<PullRequestFileStatus, { letter: string; label: string; className: string }> = {
-  added: { letter: "A", label: "Adicionado", className: "text-emerald-600 dark:text-emerald-400" },
-  removed: { letter: "D", label: "Removido", className: "text-red-600 dark:text-red-400" },
-  modified: { letter: "M", label: "Modificado", className: "text-amber-600 dark:text-amber-400" },
-  renamed: { letter: "R", label: "Renomeado", className: "text-blue-600 dark:text-blue-400" },
-  copied: { letter: "C", label: "Copiado", className: "text-blue-600 dark:text-blue-400" },
-  changed: { letter: "M", label: "Alterado", className: "text-amber-600 dark:text-amber-400" },
-  unchanged: { letter: "·", label: "Sem mudança", className: "text-muted-foreground" },
+  added: { letter: "A", label: "Added", className: "text-emerald-600 dark:text-emerald-400" },
+  removed: { letter: "D", label: "Removed", className: "text-red-600 dark:text-red-400" },
+  modified: { letter: "M", label: "Modified", className: "text-amber-600 dark:text-amber-400" },
+  renamed: { letter: "R", label: "Renamed", className: "text-blue-600 dark:text-blue-400" },
+  copied: { letter: "C", label: "Copied", className: "text-blue-600 dark:text-blue-400" },
+  changed: { letter: "M", label: "Changed", className: "text-amber-600 dark:text-amber-400" },
+  unchanged: { letter: "·", label: "Unchanged", className: "text-muted-foreground" },
 }
 
 export const fileAnchorId = (filename: string) => `file-${filename.replace(/[^\w-]/g, "_")}`

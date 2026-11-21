@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils"
 
 const CI_DISPLAY: Record<CiState, { label: string; icon: typeof CheckIcon; className: string }> = {
   pass: { label: "CI ok", icon: CheckIcon, className: "text-emerald-600 dark:text-emerald-400" },
-  fail: { label: "CI falhou", icon: XIcon, className: "text-red-600 dark:text-red-400" },
-  pending: { label: "CI rodando", icon: LoaderCircleIcon, className: "text-amber-600 dark:text-amber-400" },
-  none: { label: "Sem CI", icon: MinusIcon, className: "text-muted-foreground" },
+  fail: { label: "CI failed", icon: XIcon, className: "text-red-600 dark:text-red-400" },
+  pending: { label: "CI running", icon: LoaderCircleIcon, className: "text-amber-600 dark:text-amber-400" },
+  none: { label: "No CI", icon: MinusIcon, className: "text-muted-foreground" },
 }
 
 export function CiStatus({ ci, compact = false }: { ci: CiState; compact?: boolean }) {
@@ -39,19 +39,19 @@ export function CiStatus({ ci, compact = false }: { ci: CiState; compact?: boole
 
 function reviewSummary(pullRequest: PullRequest) {
   if (pullRequest.review === "changes") {
-    return { label: "Mudanças", detail: "Pediram mudanças", icon: CircleAlertIcon, className: "text-red-600 dark:text-red-400" }
+    return { label: "Changes", detail: "Changes requested", icon: CircleAlertIcon, className: "text-red-600 dark:text-red-400" }
   }
   if (pullRequest.review === "approved") {
-    return { label: "Aprovado", detail: "Aprovado", icon: CheckIcon, className: "text-emerald-600 dark:text-emerald-400" }
+    return { label: "Approved", detail: "Approved", icon: CheckIcon, className: "text-emerald-600 dark:text-emerald-400" }
   }
   if (pullRequest.review === "none" && pullRequest.approvals === 0) {
-    return { label: "—", detail: "Sem review obrigatória", icon: UsersIcon, className: "text-muted-foreground" }
+    return { label: "—", detail: "No required review", icon: UsersIcon, className: "text-muted-foreground" }
   }
 
-  const plural = pullRequest.approvals === 1 ? "aprovação" : "aprovações"
+  const plural = pullRequest.approvals === 1 ? "approval" : "approvals"
   return {
-    label: pullRequest.approvals > 0 ? `${pullRequest.approvals} aprov.` : "Pendente",
-    detail: `${pullRequest.approvals} ${plural}, falta review`,
+    label: pullRequest.approvals > 0 ? `${pullRequest.approvals} approved` : "Pending",
+    detail: `${pullRequest.approvals} ${plural}, review still needed`,
     icon: UsersIcon,
     className: "text-muted-foreground",
   }
@@ -92,7 +92,7 @@ export function Age({ pullRequest, now }: { pullRequest: PullRequest; now: numbe
   const stale = isStaleReview(pullRequest, now)
   return (
     <span
-      title={stale ? "Esperando revisão há mais de 2 dias" : undefined}
+      title={stale ? "Waiting for review for more than 2 days" : undefined}
       className={cn("font-mono text-xs tabular-nums", stale ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")}
     >
       {ageLabel(pullRequest.createdAt, now)}

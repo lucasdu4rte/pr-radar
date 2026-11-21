@@ -13,7 +13,7 @@ export function hoursSince(isoDate: string, now = Date.now()) {
 
 export function ageLabel(isoDate: string, now = Date.now()) {
   const hours = hoursSince(isoDate, now)
-  if (hours < 1) return "agora"
+  if (hours < 1) return "now"
   if (hours < 24) return `${hours}h`
   return `${Math.round(hours / 24)}d`
 }

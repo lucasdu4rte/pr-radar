@@ -42,7 +42,7 @@ export function AccountPicker({ accounts, selected, onSelect }: {
         <ChevronsUpDownIcon className="text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 gap-1 p-1.5">
-        <p className="px-2 pt-1 pb-1.5 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Contas no gh</p>
+        <p className="px-2 pt-1 pb-1.5 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">gh accounts</p>
         {accounts.map((account) => {
           const isSelected = accountKey(account) === accountKey(selected)
           return (
@@ -61,7 +61,7 @@ export function AccountPicker({ accounts, selected, onSelect }: {
                 <span className="block truncate font-medium">{account.login}</span>
                 <span className="block truncate text-xs text-muted-foreground">
                   {account.host}
-                  {account.active && " · ativa no terminal"}
+                  {account.active && " · active in terminal"}
                 </span>
               </span>
               {isSelected && <CheckIcon className="size-4 text-primary" />}
@@ -70,7 +70,7 @@ export function AccountPicker({ accounts, selected, onSelect }: {
         })}
         <p className="mt-1 flex gap-2 border-t px-2 pt-2 pb-1 text-xs text-muted-foreground">
           <TerminalIcon className="mt-0.5 size-3.5 shrink-0" />
-          Vem de gh auth status. Trocar aqui não muda a conta ativa do terminal.
+          From gh auth status. Switching here doesn't change the terminal's active account.
         </p>
       </PopoverContent>
     </Popover>

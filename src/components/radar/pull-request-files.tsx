@@ -119,9 +119,9 @@ function FileDiff({ file, filesUrl }: { file: PullRequestFile; filesUrl: string 
               <DiffTable lines={lines} highlighted={highlighted} />
             ) : (
               <p className="flex items-center gap-2 px-3 py-4 text-xs text-muted-foreground">
-                Sem diff para mostrar (arquivo binário, renomeado sem mudança ou grande demais).
+                No diff to show (binary file, rename without changes, or too large).
                 <a href={filesUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                  Ver no GitHub
+                  View on GitHub
                 </a>
               </p>
             )}
@@ -157,17 +157,17 @@ export function PullRequestFiles({ account, pullRequest }: { account: Account; p
   if (error) {
     return (
       <div className="flex flex-col items-start gap-2 py-6 text-sm">
-        <p className="font-medium">Não consegui carregar os arquivos</p>
+        <p className="font-medium">Couldn't load the files</p>
         <p className="text-muted-foreground">{error.message}</p>
         <Button variant="outline" size="sm" onClick={() => refetch()}>
-          Tentar de novo
+          Try again
         </Button>
       </div>
     )
   }
 
   if (data.files.length === 0) {
-    return <p className="py-10 text-center text-sm text-muted-foreground">Este PR não altera nenhum arquivo.</p>
+    return <p className="py-10 text-center text-sm text-muted-foreground">This pull request doesn't change any files.</p>
   }
 
   return (
@@ -177,9 +177,9 @@ export function PullRequestFiles({ account, pullRequest }: { account: Account; p
         {data.truncated && (
           <p className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
             <FileIcon className="size-3.5" />
-            Mostrando os primeiros {data.files.length} arquivos.
+            Showing the first {data.files.length} files.
             <a href={filesUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline underline-offset-2">
-              Ver todos no GitHub <ExternalLinkIcon className="size-3" />
+              View all on GitHub <ExternalLinkIcon className="size-3" />
             </a>
           </p>
         )}

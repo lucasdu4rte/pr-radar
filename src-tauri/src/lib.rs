@@ -9,5 +9,5 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .run(tauri::generate_context!())
-        .expect("error while running Radar de PRs");
+        .expect("error while running PR Radar");
 }

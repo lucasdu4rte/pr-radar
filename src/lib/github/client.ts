@@ -1,3 +1,4 @@
+import { demoAccounts, isDemo } from "@/lib/demo"
 import { run } from "@/lib/native/command"
 import { assertAccount } from "@/lib/native/validation"
 import type { Account } from "@/lib/types"
@@ -7,6 +8,7 @@ const tokenCache = new Map<string, string>()
 type AuthStatusEntry = { login: string; host: string; active: boolean; state: string }
 
 export async function listAccounts(): Promise<Account[]> {
+  if (isDemo()) return demoAccounts()
   const stdout = await run("gh", ["auth", "status", "--json", "hosts"])
   const parsed = JSON.parse(stdout) as { hosts: Record<string, AuthStatusEntry[]> }
   const byKey = new Map<string, Account>()
@@ -28,7 +30,7 @@ export async function getToken(account: Account) {
   if (cached) return cached
 
   const token = (await run("gh", ["auth", "token", "--user", account.login, "--hostname", account.host])).trim()
-  if (!token) throw new Error(`gh não retornou token para ${account.login}@${account.host}`)
+  if (!token) throw new Error(`gh returned no token for ${account.login}@${account.host}`)
   tokenCache.set(key, token)
   return token
 }
@@ -47,7 +49,7 @@ export async function rest<T>(account: Account, path: string) {
     headers: { Authorization: `bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
     cache: "no-store",
   })
-  if (!response.ok) throw new Error(`GitHub respondeu ${response.status}: ${await response.text()}`)
+  if (!response.ok) throw new Error(`GitHub responded ${response.status}: ${await response.text()}`)
   return (await response.json()) as T
 }
 
@@ -60,10 +62,10 @@ export async function graphql<T>(account: Account, query: string, variables: Rec
     cache: "no-store",
   })
 
-  if (!response.ok) throw new Error(`GitHub respondeu ${response.status}: ${await response.text()}`)
+  if (!response.ok) throw new Error(`GitHub responded ${response.status}: ${await response.text()}`)
 
   const payload = (await response.json()) as { data?: T; errors?: { message: string }[] }
   if (payload.errors?.length) throw new Error(payload.errors.map((error) => error.message).join("; "))
-  if (!payload.data) throw new Error("Resposta do GitHub sem dados")
+  if (!payload.data) throw new Error("GitHub response had no data")
   return payload.data
 }
