@@ -1,5 +1,3 @@
-"use client"
-
 import { Switch as SwitchPrimitive } from "@animate-ui/react/primitives/base-ui/switch"
 import { cn } from "@/lib/utils"
 

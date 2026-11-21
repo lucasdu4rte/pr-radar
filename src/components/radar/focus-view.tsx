@@ -1,5 +1,3 @@
-"use client"
-
 import { motion } from "motion/react"
 import { CircleAlertIcon, ClockIcon, EyeIcon, GitMergeIcon, type LucideIcon } from "lucide-react"
 

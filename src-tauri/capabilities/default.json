@@ -1,0 +1,30 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Runs gh/git, reads clones under $HOME and opens PR worktrees in VS Code",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        { "name": "gh", "cmd": "gh", "args": true },
+        { "name": "git", "cmd": "git", "args": true }
+      ]
+    },
+    "fs:allow-read-dir",
+    "fs:allow-read-text-file",
+    "fs:allow-exists",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$HOME/**" }]
+    },
+    "opener:allow-default-urls",
+    "opener:allow-open-url",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{ "path": "$HOME/.pr-radar/worktrees/**", "app": "Visual Studio Code" }]
+    },
+    "clipboard-manager:allow-write-text"
+  ]
+}

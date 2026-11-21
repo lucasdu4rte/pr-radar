@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { ContextMenu as ContextMenuPrimitive } from "@animate-ui/react/primitives/base-ui/context-menu"
 import { cn } from "@/lib/utils"

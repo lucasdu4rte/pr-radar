@@ -1,5 +1,3 @@
-"use client"
-
 import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "motion/react"
@@ -11,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type DiffLine, type DiffLineKind, parsePatch } from "@/lib/diff"
 import { type HighlightedLines, type HighlightedToken, highlightDiff } from "@/lib/syntax-highlight"
-import type { Account, PullRequest, PullRequestFile, PullRequestFilesResponse } from "@/lib/types"
+import { fetchPullRequestFiles } from "@/lib/github/pull-requests"
+import type { Account, PullRequest, PullRequestFile } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const COLLAPSED_BY_DEFAULT = /(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|Cargo\.lock|poetry\.lock|go\.sum|composer\.lock)$/
@@ -133,18 +132,10 @@ function FileDiff({ file, filesUrl }: { file: PullRequestFile; filesUrl: string 
   )
 }
 
-async function getFiles(account: Account, pullRequest: PullRequest) {
-  const params = new URLSearchParams({ login: account.login, host: account.host, repo: pullRequest.repo, number: String(pullRequest.number) })
-  const response = await fetch(`/api/pull-request-files?${params}`, { cache: "no-store" })
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(payload.error ?? `Falha (${response.status})`)
-  return payload as PullRequestFilesResponse
-}
-
 export function usePullRequestFiles(account: Account, pullRequest: PullRequest) {
   return useQuery({
     queryKey: ["pull-request-files", account.host, account.login, pullRequest.repo, pullRequest.number, pullRequest.updatedAt],
-    queryFn: () => getFiles(account, pullRequest),
+    queryFn: () => fetchPullRequestFiles(account, pullRequest.repo, pullRequest.number),
     staleTime: 5 * 60_000,
   })
 }

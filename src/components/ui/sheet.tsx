@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@animate-ui/react/primitives/base-ui/dialog"
 import { cn } from "@/lib/utils"

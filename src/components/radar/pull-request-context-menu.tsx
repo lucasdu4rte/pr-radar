@@ -1,9 +1,8 @@
-"use client"
-
 import { ExternalLinkIcon, LinkIcon } from "lucide-react"
 
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu"
 import { copyToClipboard } from "@/lib/clipboard"
+import { openExternal } from "@/lib/native/external"
 import type { PullRequest } from "@/lib/types"
 
 export function PullRequestContextMenu({ pullRequest, children }: { pullRequest: PullRequest; children: React.ReactNode }) {
@@ -11,7 +10,7 @@ export function PullRequestContextMenu({ pullRequest, children }: { pullRequest:
     <ContextMenu>
       <ContextMenuTrigger className="block select-auto">{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-44">
-        <ContextMenuItem onClick={() => window.open(pullRequest.url, "_blank", "noopener,noreferrer")}>
+        <ContextMenuItem onClick={() => openExternal(pullRequest.url)}>
           <ExternalLinkIcon />
           Abrir PR
         </ContextMenuItem>

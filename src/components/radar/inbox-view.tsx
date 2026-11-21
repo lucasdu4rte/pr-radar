@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { motion } from "motion/react"
 import { FolderGit2Icon, InboxIcon } from "lucide-react"

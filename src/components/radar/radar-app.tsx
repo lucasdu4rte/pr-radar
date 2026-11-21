@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useMemo, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { GitPullRequestIcon, InboxIcon, RefreshCwIcon, SearchIcon, TargetIcon } from "lucide-react"
@@ -13,6 +11,8 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { listAccounts } from "@/lib/github/client"
+import { fetchPullRequests } from "@/lib/github/pull-requests"
 import { ageLabel, byRole, matchesQuery, type RoleFilter } from "@/lib/pull-request-insights"
 import type { Account, PullRequest, PullRequestsResponse } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -36,13 +36,6 @@ function storeAccount(account: Account) {
   } catch {}
 }
 
-async function getJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { cache: "no-store" })
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(payload.error ?? `Falha (${response.status})`)
-  return payload as T
-}
-
 function useNow(intervalMs = 60_000) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -55,7 +48,7 @@ function useNow(intervalMs = 60_000) {
 function useAccounts(urlAccount: string | null, urlHost: string | null) {
   const query = useQuery({
     queryKey: ["accounts"],
-    queryFn: () => getJson<{ accounts: Account[] }>("/api/accounts").then((payload) => payload.accounts),
+    queryFn: listAccounts,
     staleTime: Infinity,
   })
   const [storedKey] = useState(readStoredAccount)
@@ -75,10 +68,7 @@ function usePullRequests(account: Account | null) {
     queryKey: pullRequestsKey(account),
     enabled: account !== null,
     refetchInterval: AUTO_REFRESH_MS,
-    queryFn: () => {
-      const params = new URLSearchParams({ login: account!.login, host: account!.host })
-      return getJson<PullRequestsResponse>(`/api/pull-requests?${params}`)
-    },
+    queryFn: () => fetchPullRequests(account!),
   })
 
   const markApproved = (pullRequestId: string) =>

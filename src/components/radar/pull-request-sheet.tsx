@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { CheckIcon, CodeIcon, CopyIcon, ExternalLinkIcon, FileDiffIcon, LinkIcon, LoaderCircleIcon, ThumbsUpIcon } from "lucide-react"
@@ -10,10 +8,13 @@ import type { SheetTab } from "@/components/radar/use-radar-filters"
 import { Age, AuthorAvatar, CiStatus, ReviewStatus } from "@/components/radar/status"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 import { copyToClipboard } from "@/lib/clipboard"
+import { approvePullRequest } from "@/lib/github/pull-requests"
+import { CloneNotFoundError, openPullRequestInEditor, readSearchRoots, storeSearchRoots } from "@/lib/local-checkout"
 import { isStaleReview } from "@/lib/pull-request-insights"
 import type { Account, PullRequest } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -28,13 +29,6 @@ type PullRequestSheetProps = {
   onApproved: (pullRequestId: string) => void
 }
 
-async function postJson(url: string, body: unknown) {
-  const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(payload.error ?? `Falha (${response.status})`)
-  return payload
-}
-
 function ApproveForm({ pullRequest, account, onDone, onCancel }: {
   pullRequest: PullRequest
   account: Account
@@ -47,7 +41,7 @@ function ApproveForm({ pullRequest, account, onDone, onCancel }: {
   const submit = async () => {
     setSending(true)
     try {
-      await postJson("/api/approve", { login: account.login, host: account.host, pullRequestId: pullRequest.id, comment })
+      await approvePullRequest(account, pullRequest.id, comment)
       toast.success(`PR #${pullRequest.number} aprovado`)
       onDone()
     } catch (error) {
@@ -83,21 +77,43 @@ function ApproveForm({ pullRequest, account, onDone, onCancel }: {
   )
 }
 
+function CloneRootsField({ onSaved }: { onSaved: () => void }) {
+  const [roots, setRoots] = useState(readSearchRoots)
+
+  const save = (event: React.FormEvent) => {
+    event.preventDefault()
+    storeSearchRoots(roots)
+    onSaved()
+  }
+
+  return (
+    <form onSubmit={save} className="flex flex-col gap-1.5 rounded-lg border bg-muted/50 p-3">
+      <label htmlFor="clone-roots" className="text-xs text-muted-foreground">
+        Pastas onde procurar clones (separe com vírgula, busca até 3 níveis)
+      </label>
+      <div className="flex gap-2">
+        <Input id="clone-roots" value={roots} onChange={(event) => setRoots(event.target.value)} placeholder="~/Apps, ~/work" className="font-mono text-xs" />
+        <Button type="submit" variant="outline">
+          Salvar e tentar
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 function OpenInEditor({ pullRequest, account }: { pullRequest: PullRequest; account: Account }) {
   const [opening, setOpening] = useState(false)
+  const [cloneMissing, setCloneMissing] = useState(false)
   const checkoutCommand = `gh pr checkout ${pullRequest.number} -R ${pullRequest.repo}`
 
   const open = async () => {
     setOpening(true)
     try {
-      const { worktree } = await postJson("/api/open-editor", {
-        login: account.login,
-        host: account.host,
-        repo: pullRequest.repo,
-        number: pullRequest.number,
-      })
+      const { worktree } = await openPullRequestInEditor(account, pullRequest.repo, pullRequest.number)
       toast.success("Aberto no VS Code", { description: worktree })
+      setCloneMissing(false)
     } catch (error) {
+      setCloneMissing(error instanceof CloneNotFoundError)
       toast.error("Não consegui abrir no VS Code", { description: error instanceof Error ? error.message : undefined })
     } finally {
       setOpening(false)
@@ -114,6 +130,7 @@ function OpenInEditor({ pullRequest, account }: { pullRequest: PullRequest; acco
       <p className="text-xs text-muted-foreground">
         Faz checkout da branch numa worktree em ~/.pr-radar/worktrees e abre a pasta, sem mexer no seu clone.
       </p>
+      {cloneMissing && <CloneRootsField onSaved={open} />}
       <div className="flex items-center gap-2 rounded-lg border bg-muted px-3 py-2 font-mono text-xs">
         <span className="min-w-0 flex-1 break-all">{checkoutCommand}</span>
         <Button variant="ghost" size="icon-xs" aria-label="Copiar comando" onClick={() => copyToClipboard(checkoutCommand, "Comando copiado")}>

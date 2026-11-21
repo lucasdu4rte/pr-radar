@@ -1,24 +1,28 @@
 # Radar de PRs
 
-Lista local dos seus PRs abertos e dos pedidos de revisão, agrupados por projeto, usando as contas já logadas no `gh`.
+App desktop (Tauri) com seus PRs abertos e os pedidos de revisão, agrupados por projeto, usando as contas já logadas no `gh`.
 
 ## Rodar
 
+Requer Node (via fnm, `.node-version`), Rust (`cargo`) e o `gh` logado (`gh auth status`).
+
 ```sh
-npm install
-npm run dev   # http://127.0.0.1:4823
+pnpm install
+pnpm app          # tauri dev: janela com hot reload
+pnpm app:build    # gera src-tauri/target/release/bundle/macos/Radar de PRs.app
 ```
 
-Requer o `gh` logado (`gh auth status`). Cada conta usa o próprio token (`gh auth token --user <login>`), então trocar de conta no app não muda a conta ativa do terminal. Um `GH_TOKEN` no ambiente é ignorado de propósito.
+`pnpm dev` sobe só o front no navegador (http://127.0.0.1:1420), mas sem Tauri as chamadas ao `gh` falham.
+
+Cada conta usa o próprio token (`gh auth token --user <login>`), então trocar de conta no app não muda a conta ativa do terminal. Um `GH_TOKEN` exportado no shell é ignorado de propósito.
+
+## Arquitetura
+
+- Front: Vite + React + Tailwind + shadcn/animate-ui, tudo em TypeScript (`src/`).
+- Nada de servidor Node: o TypeScript roda `gh`/`git` pelo plugin shell do Tauri e chama a API do GitHub direto com o token da conta.
+- Rust (`src-tauri/`) só registra os plugins e corrige o `PATH` quando o app é aberto pelo Finder.
+- Permissões em `src-tauri/capabilities/default.json`: só `gh` e `git`, leitura dentro de `$HOME` e abrir pastas de `~/.pr-radar/worktrees` no VS Code.
 
 ## Abrir no VS Code
 
-O botão procura um clone do repo nas pastas de `PR_RADAR_ROOTS` (padrão `~/Apps`, até 3 níveis, separadas por `:`), cria uma worktree em `~/.pr-radar/worktrees/<owner>/<repo>/pr-<n>`, roda `gh pr checkout` nela e abre com `code`.
-
-```sh
-PR_RADAR_ROOTS="~/Apps:~/work" npm run dev
-```
-
-## Segurança
-
-O servidor escuta só em `127.0.0.1` e as rotas de API recusam `Host`/`Origin` que não sejam locais, porque elas executam `gh`/`git` com seus tokens.
+O botão procura um clone do repo nas pastas configuradas (padrão `~/Apps`, até 3 níveis; dá para mudar no próprio app quando o clone não é achado), cria uma worktree em `~/.pr-radar/worktrees/<owner>/<repo>/pr-<n>`, roda `gh pr checkout` nela e abre no VS Code.

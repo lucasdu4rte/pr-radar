@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { CheckIcon, ChevronsUpDownIcon, TerminalIcon } from "lucide-react"
 

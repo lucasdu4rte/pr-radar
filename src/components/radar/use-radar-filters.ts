@@ -1,6 +1,4 @@
-"use client"
-
-import { useSearchParams } from "next/navigation"
+import { useMemo, useSyncExternalStore } from "react"
 
 import type { RoleFilter } from "@/lib/pull-request-insights"
 
@@ -57,18 +55,33 @@ function serialize(filters: RadarFilters) {
   return params.toString()
 }
 
+const LOCATION_CHANGE_EVENT = "pr-radar:location-change"
+
+function subscribe(onChange: () => void) {
+  window.addEventListener("popstate", onChange)
+  window.addEventListener(LOCATION_CHANGE_EVENT, onChange)
+  return () => {
+    window.removeEventListener("popstate", onChange)
+    window.removeEventListener(LOCATION_CHANGE_EVENT, onChange)
+  }
+}
+
+const currentSearch = () => window.location.search
+
 /**
- * Filters live in the URL so a view can be bookmarked or shared. Writes use
- * history.replaceState, which Next.js keeps in sync with useSearchParams
- * without a navigation per keystroke.
+ * Filters live in the URL so a reload keeps the view. Each patch is applied
+ * to the URL as it is now, so two updates in the same tick don't overwrite
+ * each other.
  */
 export function useRadarFilters() {
-  const params = useSearchParams()
-  const filters = parse(new URLSearchParams(params.toString()))
+  const search = useSyncExternalStore(subscribe, currentSearch)
+  const filters = useMemo(() => parse(new URLSearchParams(search)), [search])
 
   const setFilters = (patch: Partial<RadarFilters>) => {
-    const search = serialize({ ...filters, ...patch })
-    window.history.replaceState(null, "", search ? `?${search}` : window.location.pathname)
+    const latest = parse(new URLSearchParams(window.location.search))
+    const next = serialize({ ...latest, ...patch })
+    window.history.replaceState(null, "", next ? `?${next}` : window.location.pathname)
+    window.dispatchEvent(new Event(LOCATION_CHANGE_EVENT))
   }
 
   return [filters, setFilters] as const
