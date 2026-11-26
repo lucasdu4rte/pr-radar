@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { CheckIcon, CodeIcon, CopyIcon, ExternalLinkIcon, FileDiffIcon, LinkIcon, LoaderCircleIcon, ThumbsUpIcon } from "lucide-react"
+import { CheckIcon, CodeIcon, CopyIcon, ExternalLinkIcon, FileDiffIcon, LinkIcon, LoaderCircleIcon, RotateCcwIcon, ThumbsUpIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { PullRequestFiles, usePullRequestFiles } from "@/components/radar/pull-request-files"
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 import { copyToClipboard } from "@/lib/clipboard"
-import { approvePullRequest } from "@/lib/github/pull-requests"
+import { approvePullRequest, rerunFailedJobs } from "@/lib/github/pull-requests"
 import { CloneNotFoundError, openPullRequestInEditor, readSearchRoots, storeSearchRoots } from "@/lib/local-checkout"
 import { isStaleReview } from "@/lib/pull-request-insights"
 import type { Account, PullRequest } from "@/lib/types"
@@ -27,6 +27,7 @@ type PullRequestSheetProps = {
   onTabChange: (tab: SheetTab) => void
   onClose: () => void
   onApproved: (pullRequestId: string) => void
+  onRerunStarted: (pullRequestId: string) => void
 }
 
 function ApproveForm({ pullRequest, account, onDone, onCancel }: {
@@ -74,6 +75,30 @@ function ApproveForm({ pullRequest, account, onDone, onCancel }: {
         </div>
       </div>
     </motion.div>
+  )
+}
+
+function RerunFailedJobsButton({ pullRequest, account, onStarted }: { pullRequest: PullRequest; account: Account; onStarted: () => void }) {
+  const [rerunning, setRerunning] = useState(false)
+
+  const rerun = async () => {
+    setRerunning(true)
+    try {
+      const runCount = await rerunFailedJobs(account, pullRequest)
+      toast.success(`Re-running failed jobs in ${runCount} ${runCount === 1 ? "workflow" : "workflows"}`)
+      onStarted()
+    } catch (error) {
+      toast.error("Couldn't re-run failed jobs", { description: error instanceof Error ? error.message : undefined })
+    } finally {
+      setRerunning(false)
+    }
+  }
+
+  return (
+    <Button variant="outline" onClick={rerun} disabled={rerunning}>
+      {rerunning ? <LoaderCircleIcon className="animate-spin" /> : <RotateCcwIcon />}
+      {rerunning ? "Re-running…" : "Re-run failed jobs"}
+    </Button>
   )
 }
 
@@ -196,7 +221,7 @@ function SummaryTab({ pullRequest, account, now }: { pullRequest: PullRequest; a
   )
 }
 
-function PullRequestDetails({ pullRequest, account, now, tab, onTabChange, onApproved }: Omit<PullRequestSheetProps, "pullRequest" | "onClose"> & { pullRequest: PullRequest }) {
+function PullRequestDetails({ pullRequest, account, now, tab, onTabChange, onApproved, onRerunStarted }: Omit<PullRequestSheetProps, "pullRequest" | "onClose"> & { pullRequest: PullRequest }) {
   const [approving, setApproving] = useState(false)
   const canApprove = pullRequest.role === "review" && !pullRequest.viewerApproved
   const { data: files } = usePullRequestFiles(account, pullRequest)
@@ -234,6 +259,9 @@ function PullRequestDetails({ pullRequest, account, now, tab, onTabChange, onApp
               <CheckIcon />
               You approved
             </Badge>
+          )}
+          {pullRequest.ci === "fail" && (
+            <RerunFailedJobsButton pullRequest={pullRequest} account={account} onStarted={() => onRerunStarted(pullRequest.id)} />
           )}
           <Button variant="outline" render={<a href={pullRequest.url} target="_blank" rel="noreferrer" />}>
             <ExternalLinkIcon />

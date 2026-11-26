@@ -43,6 +43,7 @@ function toPullRequest(seed: DemoSeed, index: number, now: number): PullRequest 
     createdAt,
     updatedAt: createdAt,
     headRef: seed.headRef,
+    headSha: `demo-sha-${index}`,
     baseRef: "main",
     additions: seed.additions,
     deletions: seed.deletions,

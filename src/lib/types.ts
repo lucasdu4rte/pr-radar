@@ -20,6 +20,7 @@ export type PullRequest = {
   createdAt: string
   updatedAt: string
   headRef: string
+  headSha: string
   baseRef: string
   additions: number
   deletions: number

@@ -71,17 +71,20 @@ function usePullRequests(account: Account | null) {
     queryFn: () => fetchPullRequests(account!),
   })
 
-  const markApproved = (pullRequestId: string) =>
+  const updatePullRequest = (pullRequestId: string, update: (pullRequest: PullRequest) => Partial<PullRequest>) =>
     queryClient.setQueryData<PullRequestsResponse>(pullRequestsKey(account), (current) =>
       current && {
         ...current,
         pullRequests: current.pullRequests.map((pullRequest) =>
-          pullRequest.id === pullRequestId
-            ? { ...pullRequest, viewerApproved: true, approvals: pullRequest.approvals + 1 }
-            : pullRequest,
+          pullRequest.id === pullRequestId ? { ...pullRequest, ...update(pullRequest) } : pullRequest,
         ),
       },
     )
+
+  const markApproved = (pullRequestId: string) =>
+    updatePullRequest(pullRequestId, (pullRequest) => ({ viewerApproved: true, approvals: pullRequest.approvals + 1 }))
+
+  const markCiRunning = (pullRequestId: string) => updatePullRequest(pullRequestId, () => ({ ci: "pending" }))
 
   return {
     data: query.data ?? null,
@@ -89,6 +92,7 @@ function usePullRequests(account: Account | null) {
     error: query.error?.message ?? null,
     reload: () => query.refetch(),
     markApproved,
+    markCiRunning,
   }
 }
 
@@ -127,7 +131,7 @@ export function RadarApp() {
   const [filters, setFilters] = useRadarFilters()
   const { view, role: roleFilter, query, hideDrafts, project } = filters
   const { accounts, selected, error: accountsError } = useAccounts(filters.account, filters.host)
-  const { data, loading, error, reload, markApproved } = usePullRequests(selected)
+  const { data, loading, error, reload, markApproved, markCiRunning } = usePullRequests(selected)
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => {
@@ -253,6 +257,7 @@ export function RadarApp() {
           onTabChange={(sheetTab) => setFilters({ sheetTab })}
           onClose={() => setFilters({ pullRequest: null })}
           onApproved={markApproved}
+          onRerunStarted={markCiRunning}
         />
       )}
     </div>

@@ -43,14 +43,24 @@ function graphqlEndpoint(host: string) {
   return host === "github.com" ? "https://api.github.com/graphql" : `https://${host}/api/graphql`
 }
 
-export async function rest<T>(account: Account, path: string) {
+async function restRequest(account: Account, path: string, init: { method?: "GET" | "POST" } = {}) {
   const token = await getToken(account)
   const response = await fetch(`${restBaseUrl(account.host)}${path}`, {
+    method: init.method ?? "GET",
     headers: { Authorization: `bearer ${token}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28" },
     cache: "no-store",
   })
   if (!response.ok) throw new Error(`GitHub responded ${response.status}: ${await response.text()}`)
+  return response
+}
+
+export async function rest<T>(account: Account, path: string) {
+  const response = await restRequest(account, path)
   return (await response.json()) as T
+}
+
+export async function restPost(account: Account, path: string) {
+  await restRequest(account, path, { method: "POST" })
 }
 
 export async function graphql<T>(account: Account, query: string, variables: Record<string, unknown>) {

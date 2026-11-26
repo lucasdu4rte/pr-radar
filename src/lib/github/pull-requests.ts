@@ -1,5 +1,5 @@
 import { demoPullRequestFiles, demoPullRequests, isDemo } from "@/lib/demo"
-import { graphql, rest } from "@/lib/github/client"
+import { graphql, rest, restPost } from "@/lib/github/client"
 import { assertPullRequestNumber, assertRepo } from "@/lib/native/validation"
 import type {
   Account,
@@ -29,6 +29,7 @@ const PULL_REQUESTS_QUERY = /* GraphQL */ `
     createdAt
     updatedAt
     headRefName
+    headRefOid
     baseRefName
     additions
     deletions
@@ -59,6 +60,7 @@ type RawPullRequest = {
   createdAt: string
   updatedAt: string
   headRefName: string
+  headRefOid: string
   baseRefName: string
   additions: number
   deletions: number
@@ -103,6 +105,7 @@ function toPullRequest(raw: RawPullRequest, role: PullRequestRole): PullRequest 
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
     headRef: raw.headRefName,
+    headSha: raw.headRefOid,
     baseRef: raw.baseRefName,
     additions: raw.additions,
     deletions: raw.deletions,
@@ -174,4 +177,38 @@ export async function fetchPullRequestFiles(account: Account, repo: string, numb
 export async function approvePullRequest(account: Account, pullRequestId: string, body: string) {
   if (isDemo()) throw new Error("Not available in demo mode")
   await graphql(account, APPROVE_MUTATION, { pullRequestId, body: body.trim() || null })
+}
+
+const RERUNNABLE_CONCLUSIONS = new Set(["failure", "timed_out", "cancelled"])
+
+type RawWorkflowRun = { id: number; workflow_id: number; event: string; status: string; conclusion: string | null }
+
+/** Runs come newest first; an older failed run is superseded once the same workflow ran again for the same trigger. */
+function latestRunPerWorkflow(runs: RawWorkflowRun[]) {
+  const byWorkflow = new Map<string, RawWorkflowRun>()
+  for (const run of runs) {
+    const key = `${run.workflow_id}:${run.event}`
+    if (!byWorkflow.has(key)) byWorkflow.set(key, run)
+  }
+  return [...byWorkflow.values()]
+}
+
+/** Re-runs the failed jobs of every GitHub Actions run on the PR's head commit and returns how many runs were restarted. */
+export async function rerunFailedJobs(account: Account, pullRequest: Pick<PullRequest, "repo" | "headSha">) {
+  if (isDemo()) throw new Error("Not available in demo mode")
+  assertRepo(pullRequest.repo)
+  const { workflow_runs: runs } = await rest<{ workflow_runs: RawWorkflowRun[] }>(
+    account,
+    `/repos/${pullRequest.repo}/actions/runs?head_sha=${encodeURIComponent(pullRequest.headSha)}&per_page=100`,
+  )
+  const failedRuns = latestRunPerWorkflow(runs).filter((run) => run.status === "completed" && RERUNNABLE_CONCLUSIONS.has(run.conclusion ?? ""))
+  if (failedRuns.length === 0) throw new Error("No failed GitHub Actions runs on the latest commit")
+
+  const results = await Promise.allSettled(
+    failedRuns.map((run) => restPost(account, `/repos/${pullRequest.repo}/actions/runs/${run.id}/rerun-failed-jobs`)),
+  )
+  const restarted = results.filter((result) => result.status === "fulfilled").length
+  const firstFailure = results.find((result) => result.status === "rejected")
+  if (restarted === 0 && firstFailure) throw firstFailure.reason
+  return restarted
 }
