@@ -15,15 +15,16 @@ type DemoSeed = Pick<PullRequest, "repo" | "number" | "title" | "headRef" | "add
   ageHours: number
   draft?: boolean
   approvals?: number
+  baseRef?: string
 }
 
 const SEEDS: DemoSeed[] = [
   { repo: "acme/storefront", number: 412, title: "Checkout: keep cart items when the session expires", headRef: "fix/cart-session", additions: 184, deletions: 37, role: "review", ci: "pass", review: "required", author: "mira-dev", ageHours: 5 },
-  { repo: "acme/storefront", number: 409, title: "Add Apple Pay to the payment step", headRef: "feat/apple-pay", additions: 1240, deletions: 96, role: "review", ci: "pending", review: "required", author: "joao-s", ageHours: 30 },
+  { repo: "acme/storefront", number: 409, title: "Add Apple Pay to the payment step", headRef: "feat/apple-pay", baseRef: "develop", additions: 1240, deletions: 96, role: "review", ci: "pending", review: "required", author: "joao-s", ageHours: 30 },
   { repo: "acme/storefront", number: 401, title: "Product page: lazy load the reviews section", headRef: "perf/lazy-reviews", additions: 88, deletions: 140, role: "review", ci: "pass", review: "required", author: "lin-chen", ageHours: 76 },
   { repo: "acme/storefront", number: 415, title: "Search: typo tolerance and synonyms", headRef: "feat/fuzzy-search", additions: 532, deletions: 41, role: "mine", ci: "pass", review: "approved", author: "octocat", ageHours: 20, approvals: 2 },
   { repo: "acme/api", number: 88, title: "Rate limit public endpoints per API key", headRef: "feat/rate-limit", additions: 310, deletions: 12, role: "review", ci: "fail", review: "required", author: "sam-ops", ageHours: 54 },
-  { repo: "acme/api", number: 91, title: "Orders: idempotent retries on webhook delivery", headRef: "fix/webhook-retries", additions: 146, deletions: 58, role: "mine", ci: "fail", review: "changes", author: "octocat", ageHours: 26 },
+  { repo: "acme/api", number: 91, title: "Orders: idempotent retries on webhook delivery", headRef: "fix/webhook-retries", baseRef: "release/2.4", additions: 146, deletions: 58, role: "mine", ci: "fail", review: "changes", author: "octocat", ageHours: 26 },
   { repo: "acme/api", number: 93, title: "Upgrade to Postgres 18 and drop legacy indexes", headRef: "chore/pg18", additions: 64, deletions: 210, role: "mine", ci: "pending", review: "required", author: "octocat", ageHours: 3 },
   { repo: "acme/design-system", number: 57, title: "Button: loading state and icon-only size", headRef: "feat/button-loading", additions: 221, deletions: 18, role: "review", ci: "pass", review: "required", author: "ana-ui", ageHours: 9 },
   { repo: "acme/design-system", number: 55, title: "Dark mode tokens for charts", headRef: "feat/chart-tokens", additions: 98, deletions: 22, role: "mine", ci: "pass", review: "none", author: "octocat", ageHours: 60, draft: true },
@@ -44,7 +45,7 @@ function toPullRequest(seed: DemoSeed, index: number, now: number): PullRequest 
     updatedAt: createdAt,
     headRef: seed.headRef,
     headSha: `demo-sha-${index}`,
-    baseRef: "main",
+    baseRef: seed.baseRef ?? "main",
     additions: seed.additions,
     deletions: seed.deletions,
     comments: (index * 3) % 7,

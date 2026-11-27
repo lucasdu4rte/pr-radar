@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion } from "motion/react"
-import { FolderGit2Icon, InboxIcon } from "lucide-react"
+import { ArrowRightIcon, FolderGit2Icon, InboxIcon } from "lucide-react"
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Age, AuthorAvatar, CiStatus, DraftBadge, ReviewStatus } from "@/components/radar/status"
@@ -72,8 +72,11 @@ function PullRequestRow({ pullRequest, index, onOpen, now }: { pullRequest: Pull
           <span className="truncate font-medium">{pullRequest.title}</span>
           {pullRequest.isDraft && <DraftBadge />}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">
-          #{pullRequest.number} · {pullRequest.headRef}
+        <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground" title={`${pullRequest.headRef} → ${pullRequest.baseRef}`}>
+          <span className="shrink-0">#{pullRequest.number} ·</span>
+          <span className="truncate">{pullRequest.headRef}</span>
+          <ArrowRightIcon aria-label="into" className="size-3 shrink-0" />
+          <span className="max-w-[40%] shrink-0 truncate font-medium text-foreground/80">{pullRequest.baseRef}</span>
         </span>
       </span>
       <span className="hidden text-right sm:block" title={`${pullRequest.additions + pullRequest.deletions} lines changed`}>
