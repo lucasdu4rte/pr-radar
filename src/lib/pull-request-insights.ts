@@ -35,7 +35,7 @@ export function isReadyToMerge(pullRequest: PullRequest) {
 export function matchesQuery(pullRequest: PullRequest, query: string) {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
-  const haystack = [pullRequest.title, pullRequest.repo, pullRequest.author.login, `#${pullRequest.number}`, pullRequest.headRef]
+  const haystack = [pullRequest.title, pullRequest.repo, pullRequest.author.login, `#${pullRequest.number}`, pullRequest.headRef, pullRequest.baseRef]
   return haystack.join(" ").toLowerCase().includes(needle)
 }
 
